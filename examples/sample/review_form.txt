@@ -1,0 +1,25 @@
+CVPR 2026 review form: SparseSplat: Adaptive Gaussian Pruning for Real-Time Novel View Synthesis
+AI-generated; scores are an uncalibrated estimate. Check everything before using it.
+========================================================================
+
+Paper Summary:
+The paper proposes SparseSplat, a 3DGS variant that learns a per-Gaussian importance score for pruning and adds a view-dependent opacity regularizer, reporting 3.1x faster rendering at comparable PSNR on three standard benchmarks.
+
+Paper Strengths:
+1. Practically relevant goal with careful speed measurements (Table 3).
+2. Full hyperparameters and promised code (Appendix B).
+
+Paper Weaknesses:
+1. The learned importance score is close to LightGaussian's significance score, which the paper describes inaccurately (§2, §3.1).
+2. The 3DGS baseline PSNR in Table 1 is below the published number on the same split.
+3. No ablation isolates the opacity regularizer.
+4. Two recent pruning methods are missing from the comparison.
+
+Preliminary Recommendation:
+3: Borderline
+
+Justification For Recommendation:
+The speed results are useful, but the novelty claim and the baseline numbers need correcting before the gains can be trusted.
+
+Confidence Level:
+4: Confident but not absolutely certain

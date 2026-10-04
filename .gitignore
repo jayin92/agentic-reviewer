@@ -1,0 +1,15 @@
+# Review outputs and papers: may contain confidential submissions
+reviews/
+papers/
+*.pdf
+
+# Personal Claude Code settings (holds your S2_API_KEY)
+.claude/settings.local.json
+
+# Python
+__pycache__/
+*.pyc
+
+# Scratch
+last.xml
+.DS_Store

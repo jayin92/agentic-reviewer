@@ -1,0 +1,121 @@
+{
+ "schema_version": 1,
+ "generated_by": "EXAMPLE OUTPUT for a fictional paper, made to show the format. Not a real review.",
+ "paper": {
+  "title": "SparseSplat: Adaptive Gaussian Pruning for Real-Time Novel View Synthesis",
+  "pdf": "papers/sparsesplat.pdf",
+  "markdown": "examples/sample/paper.md",
+  "field": "computer vision / neural rendering",
+  "contributions": [
+   "C1: a learned importance score that prunes 3D Gaussians during training",
+   "C2: a view-dependent opacity regularizer",
+   "C3: 3.1x faster rendering at equal PSNR on Mip-NeRF 360"
+  ]
+ },
+ "venue": {
+  "name": "CVPR",
+  "year": "2026",
+  "profile": "venues/cvpr-2026.md",
+  "form_fields": [
+   {"name": "Paper Summary", "type": "text"},
+   {"name": "Paper Strengths", "type": "text"},
+   {"name": "Paper Weaknesses", "type": "text"},
+   {"name": "Preliminary Recommendation", "type": "choice", "scale": "1 Reject, 2 Weak Reject, 3 Borderline, 4 Weak Accept, 5 Accept (example scale)"},
+   {"name": "Justification For Recommendation", "type": "text"},
+   {"name": "Confidence Level", "type": "score", "scale": "1-5 (example scale)"}
+  ]
+ },
+ "integrity": {"injection_flags": []},
+ "overview": "A solid efficiency paper whose main speed claim holds, but the novelty of the pruning score is overstated.\nC1 closely matches LightGaussian's global significance score; the paper cites LightGaussian but describes it as \"heuristic, not learned\", which the fact-check found inaccurate.\nThe 3DGS baseline PSNR in Table 1 (27.21) is lower than the original paper's 27.45 on the same split.\nTwo strong 2025 pruning methods are not cited or compared.\nFixing the baseline numbers and adding one ablation on the regularizer would address most major concerns.",
+ "summary": "The paper proposes SparseSplat, which learns a per-Gaussian importance score during 3D Gaussian Splatting training and prunes low-importance Gaussians, combined with a view-dependent opacity regularizer. On Mip-NeRF 360, Tanks and Temples and Deep Blending it reports 3.1x faster rendering and 58% fewer Gaussians at comparable PSNR.",
+ "strengths": [
+  {"point": "Clear and practically relevant goal: real-time rendering on consumer GPUs.", "location": "§1"},
+  {"point": "Speed measurements are thorough, reported on three GPUs with warm-up and variance.", "location": "Table 3"},
+  {"point": "Code and training configs are promised and hyperparameters are fully listed.", "location": "Appendix B"}
+ ],
+ "weaknesses": [
+  {"id": "W1", "title": "The learned importance score (C1) is close to LightGaussian's significance score", "detail": "LightGaussian [14] computes a global significance from hit count × opacity × volume, and its §3.2 also fine-tunes the score jointly with training. The claimed difference, that SparseSplat's score is learned, amounts to one extra MLP head. §2 describes [14] as a \"heuristic, not learned\" method, which understates the overlap.", "location": "§3.1, §2", "severity": "major", "suggestion": "Reposition C1 as an extension of [14]. Add a direct comparison with [14] at matched Gaussian counts, and an ablation that replaces your score with [14]'s score inside your pipeline.", "raised_by": ["novelty", "theorist"], "status": "valid", "category": "novelty"},
+  {"id": "W2", "title": "3DGS baseline PSNR is lower than the original paper reports", "detail": "Table 1 lists 3DGS at 27.21 PSNR on Mip-NeRF 360. The original 3DGS paper reports 27.45 (its Table 1, same 7-scene split, 30k iterations). Most of the reported +0.18 dB gain of SparseSplat would disappear against the original number.", "location": "Table 1", "severity": "major", "suggestion": "Use the published 27.45 or explain the re-run setting (resolution, iterations, seed). Report mean ± std over 3 seeds for both methods.", "raised_by": ["empiricist"], "status": "valid", "category": "experiments"},
+  {"id": "W3", "title": "No ablation isolating the opacity regularizer (C2)", "detail": "Table 4 ablates pruning thresholds but always keeps the regularizer on, so its contribution to quality and speed cannot be separated.", "location": "Table 4", "severity": "major", "suggestion": "Add rows with the regularizer removed and with it added to vanilla 3DGS.", "raised_by": ["empiricist", "theorist"], "status": "partially_valid", "category": "experiments"},
+  {"id": "W4", "title": "Missing comparison to two 2025 pruning methods", "detail": "[U1] and [U2] report higher compression at equal PSNR on the same benchmarks and were public well before the deadline.", "location": "§5", "severity": "minor", "suggestion": "Cite both and add them to Table 1, or explain why they are not comparable.", "raised_by": ["novelty"], "status": "valid", "category": "related_work"},
+  {"id": "W5", "title": "Fig. 4 y-axis starts at 26.5 dB", "detail": "The truncated axis makes a 0.2 dB gap look like a large margin.", "location": "Fig. 4", "severity": "minor", "suggestion": "Start the axis at a round value or add a note that it is truncated.", "raised_by": ["figures"], "status": "valid", "category": "figures"}
+ ],
+ "novelty": {
+  "verdicts": [
+   {"contribution": "C1: learned importance score for pruning", "verdict": "can_refute", "closest_work": "[14] LightGaussian (cited)", "evidence": "[14] §3.2 fine-tunes its significance score jointly with training, which is the core of C1."},
+   {"contribution": "C2: view-dependent opacity regularizer", "verdict": "unclear", "closest_work": "[U3] (uncited)", "evidence": "[U3] uses a similar view-conditioned opacity penalty for anti-aliasing, not pruning."},
+   {"contribution": "C3: 3.1x faster rendering at equal PSNR", "verdict": "cannot_refute", "closest_work": "[U1] (uncited)", "evidence": "No prior work reports this speed at equal quality on these GPUs, though [U1] is close at 2.6x."}
+  ],
+  "discussion": "The strongest novelty is the **combination** of pruning with the opacity regularizer and the resulting speed. The importance score on its own is incremental over [LightGaussian](https://arxiv.org/abs/2311.17245)."
+ },
+ "questions": [
+  "How was the 3DGS baseline in Table 1 trained, and why does it differ from the published 27.45 dB?",
+  "Does the importance score transfer to a pre-trained 3DGS model without retraining?",
+  "What is the training-time overhead of the extra MLP head?"
+ ],
+ "revision_plan": [
+  {"step": "Re-run or correct the 3DGS baseline in Table 1 and report 3 seeds for all methods.", "priority": "high", "addresses": ["W2"]},
+  {"step": "Rewrite the description of LightGaussian in §2 and reposition C1 as an extension of it.", "priority": "high", "addresses": ["W1"]},
+  {"step": "Add a regularizer ablation to Table 4.", "priority": "high", "addresses": ["W3"]},
+  {"step": "Cite and compare with [U1] and [U2].", "priority": "medium", "addresses": ["W4"]},
+  {"step": "Redraw Fig. 4 with an untruncated axis.", "priority": "low", "addresses": ["W5"]}
+ ],
+ "venue_form": [
+  {"field": "Paper Summary", "value": "The paper proposes SparseSplat, a 3DGS variant that learns a per-Gaussian importance score for pruning and adds a view-dependent opacity regularizer, reporting 3.1x faster rendering at comparable PSNR on three standard benchmarks."},
+  {"field": "Paper Strengths", "value": "1. Practically relevant goal with careful speed measurements (Table 3).\n2. Full hyperparameters and promised code (Appendix B)."},
+  {"field": "Paper Weaknesses", "value": "1. The learned importance score is close to LightGaussian's significance score, which the paper describes inaccurately (§2, §3.1).\n2. The 3DGS baseline PSNR in Table 1 is below the published number on the same split.\n3. No ablation isolates the opacity regularizer.\n4. Two recent pruning methods are missing from the comparison."},
+  {"field": "Preliminary Recommendation", "value": "3: Borderline"},
+  {"field": "Justification For Recommendation", "value": "The speed results are useful, but the novelty claim and the baseline numbers need correcting before the gains can be trusted."},
+  {"field": "Confidence Level", "value": "4: Confident but not absolutely certain"}
+ ],
+ "scores": {
+  "dimensions": [
+   {"key": "originality", "label": "Originality of the ideas and approach", "median": 2},
+   {"key": "importance", "label": "Importance of the research question addressed", "median": 3.5},
+   {"key": "claims_supported", "label": "Whether the claims are well supported by evidence", "median": 2.5},
+   {"key": "experimental_soundness", "label": "Soundness of the experiments", "median": 2.5},
+   {"key": "clarity", "label": "Clarity of writing and presentation", "median": 4},
+   {"key": "community_value", "label": "Value to the research community", "median": 3},
+   {"key": "contextualization", "label": "Whether it is contextualized appropriately relative to prior work", "median": 2}
+  ],
+  "by_reviewer": [
+   {"persona": "empiricist", "scores": {"originality": 3, "importance": 4, "claims_supported": 2, "experimental_soundness": 2, "clarity": 4, "community_value": 3, "contextualization": 3}, "confidence": 4},
+   {"persona": "theorist", "scores": {"originality": 2, "importance": 3, "claims_supported": 3, "experimental_soundness": 3, "clarity": 4, "community_value": 3, "contextualization": 2}, "confidence": 3},
+   {"persona": "novelty", "scores": {"originality": 2, "importance": 3, "claims_supported": 3, "experimental_soundness": 3, "clarity": 4, "community_value": 3, "contextualization": 2}, "confidence": 4},
+   {"persona": "clarity-impact", "scores": {"originality": 2, "importance": 4, "claims_supported": 2, "experimental_soundness": 2, "clarity": 3, "community_value": 4, "contextualization": 2}, "confidence": 3}
+  ]
+ },
+ "cited_work": {
+  "references": [
+   {"key": "[9]", "title": "3D Gaussian Splatting for Real-Time Radiance Field Rendering", "year": "2023", "role": "baseline", "arxiv_id": "2308.04079", "url": "https://arxiv.org/abs/2308.04079", "verified": true, "core": true},
+   {"key": "[14]", "title": "LightGaussian: Unbounded 3D Gaussian Compression with 15x Reduction and 200+ FPS", "year": "2023", "role": "compared_method", "arxiv_id": "2311.17245", "url": "https://arxiv.org/abs/2311.17245", "verified": true, "core": true},
+   {"key": "[22]", "title": "Mip-NeRF 360: Unbounded Anti-Aliased Neural Radiance Fields", "year": "2022", "role": "dataset_benchmark", "verified": true, "core": false},
+   {"key": "[31]", "title": "Fast Splat Rendering on Mobile Devices (technical report)", "year": "2024", "role": "background", "verified": false, "core": false}
+  ],
+  "reads": [
+   {"key": "[9]", "fetched": "full_text", "summary": "Introduces 3D Gaussian Splatting: anisotropic 3D Gaussians optimized with adaptive density control and a tile-based differentiable rasterizer, reaching real-time rendering at state-of-the-art quality. Reports 27.45 PSNR on Mip-NeRF 360.", "citation_accuracy": {"verdict": "accurate", "detail": "Described correctly in §2."}, "baseline_numbers": {"verdict": "mismatch", "detail": "Submission Table 1: 27.21. Original Table 1: 27.45, same split and iteration count."}, "novelty_overlap": {"level": "none", "detail": "Base method."}},
+   {"key": "[14]", "fetched": "full_text", "summary": "Prunes Gaussians by a global significance score, distills spherical harmonics and applies vector quantization, reaching 15x compression and more than 200 FPS.", "citation_accuracy": {"verdict": "misrepresented", "detail": "Submission §2: \"heuristic, not learned\". [14] §3.2 fine-tunes the score jointly during training."}, "baseline_numbers": {"verdict": "not_applicable", "detail": "Not in the results tables."}, "novelty_overlap": {"level": "substantial", "detail": "Overlaps C1."}}
+  ],
+  "light_flags": [],
+  "issues": [
+   {"id": "num-[9]", "key": "[9]", "title": "3D Gaussian Splatting for Real-Time Radiance Field Rendering", "kind": "baseline_numbers", "claim": "Table 1 reports 27.21 PSNR for 3DGS; the original reports 27.45 on the same split.", "verification": {"verdict": "valid", "evidence": "Both tables use the 7-scene split at 30k iterations; the submission gives no re-run details."}},
+   {"id": "cite-[14]", "key": "[14]", "title": "LightGaussian", "kind": "citation_accuracy", "claim": "Described as \"heuristic, not learned\", but [14] fine-tunes the score during training.", "verification": {"verdict": "partially_valid", "evidence": "The score formula is hand-designed, but it is refined by training (§3.2), so \"not learned\" is overstated."}}
+  ],
+  "reference_problems": [
+   {"key": "[31]", "title": "Fast Splat Rendering on Mobile Devices (technical report)", "status": "could_not_verify", "source": "Semantic Scholar, OpenAlex, Crossref, DBLP, web search"}
+  ]
+ },
+ "uncited_work": [
+  {"ref": "U1", "title": "Example uncited pruning method A", "authors": "Example et al.", "year": "2025", "url": "https://arxiv.org/", "category": "missing_baseline", "relevance": 5, "relation": "Prunes 3DGS with a learned mask and reports 2.6x speed at equal PSNR on the same benchmarks.", "found_via": "S2 recommendation; cites [9] and [14]", "summary": "Placeholder summary for the example.", "detailed": true},
+  {"ref": "U2", "title": "Example uncited compression method B", "authors": "Example et al.", "year": "2025", "url": "https://arxiv.org/", "category": "missing_baseline", "relevance": 4, "relation": "Higher compression ratio at similar quality; directly comparable.", "found_via": "arXiv query: gaussian splatting pruning", "summary": "Placeholder abstract for the example.", "detailed": false},
+  {"ref": "U3", "title": "Example view-conditioned opacity work C", "authors": "Example et al.", "year": "2024", "url": "https://arxiv.org/", "category": "related_technique", "relevance": 3, "relation": "Uses a similar view-conditioned opacity penalty, for anti-aliasing instead of pruning.", "found_via": "arXiv query: view-dependent opacity", "summary": "Placeholder abstract for the example.", "detailed": false}
+ ],
+ "dropped_criticisms": [
+  {"id": "clarity-impact-W3", "persona": "clarity-impact", "point": "The paper does not report memory usage.", "location": "§5", "verdict": "refuted", "evidence": "Table 3 reports peak VRAM for all methods."}
+ ],
+ "stats": {
+  "references": 42, "references_verified": 39, "references_read_in_full": 12,
+  "citation_issues_flagged": 3, "citation_issues_upheld": 2,
+  "uncited_related": 3, "criticisms_total": 17, "criticisms_kept": 11
+ }
+}
