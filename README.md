@@ -91,30 +91,40 @@ Venue-form scores and dimension scores are **uncalibrated** AI estimates.
 
 ## Pipeline
 
-```
-Venue profile (load or fetch) ─┐
-Ingest ─ PDF → paper.md, hidden-text scan, key facts
-   │
-   ├──────────────────────────────┐
-References                        Uncited work (keyword)
- extract bibliography + contexts   3 arXiv search angles
- resolve on Semantic Scholar            │
- re-check unresolved (OpenAlex,         │
- Crossref, DBLP, web)                   │
-   │                                    │
-   ├─ Cited work ─────────┐   ├─ Uncited work (graph)
-   │  core refs read in   │   │  S2 recommendations, co-citation,
-   │  full (4 per agent): │   │  recent keyword search
-   │  citation accuracy,  │   │  → dedupe vs cited → rank (venue
-   │  baseline numbers,   │   │    concurrent-work rule) → summarize
-   │  novelty overlap     │   │
-   │  other refs: abstract check
-   │  → adversarial verify of serious issues
-   └──────────┬───────────┘───┘
-Review ─ 4 personas (empiricist, theorist, novelty w/ per-claim verdicts,
-         clarity/impact) + figure/table reviewer, all following the venue guidelines
-Fact-check ─ refute / rewrite / drop each criticism against the paper
-Synthesize ─ area chair → review.json → render_review.py → all outputs
+```mermaid
+flowchart TD
+    PDF[/"paper.pdf"/] --> ING["<b>Ingest</b><br/>PDF → paper.md<br/>hidden-text scan · key facts"]
+    VEN["<b>Venue profile</b><br/>load venues/*.md or fetch<br/>official guidelines"]
+
+    ING --> REF["<b>References</b><br/>extract bibliography + contexts<br/>resolve on Semantic Scholar<br/>re-check unresolved via<br/>OpenAlex · Crossref · DBLP · web"]
+    ING --> KW["<b>Uncited work · keyword</b><br/>3 arXiv search angles"]
+
+    subgraph CITED["Cited work"]
+        CORE["core refs read in full, 4 per agent<br/>citation accuracy · baseline numbers<br/>novelty overlap"]
+        ABS["other refs<br/>abstract check"]
+        VER["adversarial verify<br/>of serious issues"]
+        CORE --> VER
+        ABS --> VER
+    end
+
+    subgraph UNCITED["Uncited work · graph"]
+        GR["S2 recommendations · co-citation<br/>recent keyword search"]
+        RANK["dedupe vs cited → rank<br/>(venue concurrent-work rule)<br/>→ summarize"]
+        GR --> RANK
+    end
+
+    REF --> CORE
+    REF --> ABS
+    REF --> GR
+    KW --> RANK
+
+    VER --> REV
+    RANK --> REV
+    VEN --> REV
+    REV["<b>Review</b><br/>4 personas: empiricist · theorist ·<br/>novelty (per-claim verdicts) · clarity/impact<br/>+ figure/table reviewer"]
+    REV --> FC["<b>Fact-check</b><br/>refute / rewrite / drop<br/>each criticism against the paper"]
+    FC --> SYN["<b>Synthesize</b><br/>area chair → review.json"]
+    SYN --> OUT[/"review.md · review_form.txt<br/>report.html · cited_work.md · uncited_work.md"/]
 ```
 
 A typical paper uses about 28 agents. Reviews are AI-generated and may contain errors.
