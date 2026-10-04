@@ -118,3 +118,7 @@ Synthesize ─ area chair → review.json → render_review.py → all outputs
 ```
 
 A typical paper uses about 28 agents. Reviews are AI-generated and may contain errors.
+
+## License
+
+[MIT](LICENSE)
