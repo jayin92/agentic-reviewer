@@ -70,7 +70,8 @@ def cmd_find(a):
         raw = p.read_text(encoding="utf-8", errors="replace")
         if begin not in raw:
             continue
-        for line in raw.splitlines():
+        # split('\n'), not splitlines(): JSONL strings hold U+2028/U+0085 raw, which splitlines() splits on.
+        for line in raw.split("\n"):
             if begin not in line:
                 continue
             try:
